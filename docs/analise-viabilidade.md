@@ -199,25 +199,45 @@ Nome: `sankhya` (um servidor). Transporte inicial: **stdio** no Cursor Desktop. 
 
 Escrita (pedido, parceiro) só como **tools tipadas**, copiadas das coleções Postman já homologadas, com schema rígido.
 
-### Perfil de cliente (config, não chat)
+### Perfil de cliente (1Password, não chat)
 
-```yaml
-# exemplo conceitual — credenciais só em env / secret, não no git
-profiles:
-  cliente-acme:
-    mode: direct
-    base_url: https://erp.acme.local:8280
-    username_env: SANKHYA_ACME_USER
-    password_env: SANKHYA_ACME_PASSWORD
-  cliente-beta:
-    mode: gateway-oauth
-    gateway_url: https://api.sankhya.com.br
-    client_id_env: SANKHYA_BETA_CLIENT_ID
-    client_secret_env: SANKHYA_BETA_CLIENT_SECRET
-    x_token_env: SANKHYA_BETA_X_TOKEN
+Fonte da verdade: vault **Sankhya – Clientes** no 1Password da equipe, via CLI `op` (item pelo título = nome do perfil). Referenciar o vault pelo **ID**, não pelo nome (o traço do título não é hífen ASCII).
+
+Cada item hoje é um Login de consultoria. O MCP lê só campos estruturados e **ignora `notesPlain`** (lá entram VPN, RDP, banco — isso não vai para o modelo).
+
+| Campo do Login | Uso |
+|----------------|-----|
+| título | `profile` (`Garra`, `Fralia`, …) |
+| `username` | `NOMUSU` no `MobileLoginSP` |
+| `password` | `INTERNO` (só o campo senha do Login, com `--reveal` interno) |
+| URL primária | `base_url` do Om; strip de `/mge/` e path |
+
+Variáveis de ambiente continuam só como escape hatch (um cliente, máquina sem `op`).
+
+#### Regra de modo (fechada)
+
+**Default: `direct`.** Hoje todos os clientes no cofre são host direto. Alguns já têm Gateway na Sankhya, mas **isso não está no 1Password** — o MCP não adivinha.
+
+Gateway **somente** quando o item tiver **os quatro** de propósito:
+
+1. `mode` = `gateway` (comparação case-insensitive)
+2. `client_id`
+3. `client_secret`
+4. `x_token`
+
+Qualquer outra combinação (`mode=gateway` sem as três chaves, ou as três chaves sem `mode`) **não** ativa Gateway: o MCP permanece em `direct` e avisa no `sankhya_status` que o item está incompleto. Não existe modo “meio gateway”.
+
+```text
+se mode == gateway
+   e client_id, client_secret, x_token preenchidos
+     → adapter Gateway (POST /authenticate)
+senão
+     → adapter Direct (MobileLoginSP no host da URL)
 ```
 
-O processo do MCP roda **na máquina que alcança o ERP**. IP `10.10.10.35` não existe a partir da nuvem. Cursor Cloud Agent não substitui VPN. Gateway (`api.sankhya.com.br`) é a exceção pública — e ainda assim o processamento cai no Om do cliente.
+Quando um cliente passar a ser Gateway de verdade, o trabalho é no cofre: criar/preencher esses quatro campos no item. Sem mudança de código.
+
+O processo do MCP roda **na máquina que alcança o ERP**. IP interno e host `*.snk.ativy.com` exigem VPN. Cursor Cloud Agent não substitui isso. Gateway (`api.sankhya.com.br`) é a exceção pública — e ainda assim o processamento cai no Om do cliente.
 
 ### Stack
 
