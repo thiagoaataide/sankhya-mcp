@@ -1,0 +1,36 @@
+{
+  "name": "sankhya-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP local para consultar o Sankhya Om (auth invisível, credenciais no 1Password).",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "sankhya-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "tsx --test src/mode.test.ts src/sql-guard.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "sankhya"
+  ],
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

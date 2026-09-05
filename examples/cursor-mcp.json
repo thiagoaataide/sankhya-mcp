@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "sankhya": {
+      "command": "C:\\projetos\\sankhya-mcp\\scripts\\sankhya-mcp.cmd",
+      "env": {
+        "SANKHYA_OP_VAULT": "tkrys7yhgj64dmo643ovrxa7ie"
+      }
+    }
+  }
+}

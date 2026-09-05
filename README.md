@@ -1,21 +1,79 @@
-# Sankhya MCP
+# sankhya-mcp
 
-Ferramentas MCP para o Cursor falar com o Sankhya Om: autenticar (host do cliente ou Gateway) e executar consultas com o dicionário de dados como contexto.
+MCP **local** para o Cursor consultar o Sankhya Om. Um servidor, autenticação invisível, credenciais no vault **Sankhya – Clientes** do 1Password.
 
-Este repositório começa pela decisão de desenho, não pelo código. A análise de viabilidade e a recomendação de arquitetura estão em [`docs/analise-viabilidade.md`](docs/analise-viabilidade.md).
+Este repositório é o projeto. Na máquina da equipe ele deve viver em:
 
-## O que foi decidido
+```text
+C:\projetos\sankhya-mcp
+```
 
-- **Um** servidor MCP (`sankhya`), não um MCP de login separado do MCP de query.
-- Autenticação **invisível**: login lazy, refresh em sessão morta, token nunca volta na tool.
-- Dois adaptadores: `MobileLoginSP` no host direto e OAuth `/authenticate` no Gateway.
-- Credenciais no vault **Sankhya – Clientes** (1Password CLI). **Default `direct`.** Gateway só se o item tiver `mode=gateway` **e** `client_id`, `client_secret`, `x_token`.
-- Primeira capacidade de negócio: `execute_query` read-only (`DbExplorerSP.executeQuery`, com `ExecQuerySP.execQuery` como fallback de limite).
+O agente que gerou o código não consegue criar pasta no seu `C:\`. Clone (ou copie) o git para esse caminho.
 
-## Ainda não há servidor rodando
+## O que o modelo vê
 
-A implementação da fatia v1 (cliente HTTP + tools) fica para o próximo passo, depois desta análise.
+| Tool | Função |
+|------|--------|
+| `sankhya_list_profiles` | Títulos dos itens no vault (os nomes de cliente) |
+| `sankhya_execute_query` | Roda um **SELECT**. Loga sozinho. `profile` = título do item (`Fralia`, `Diagno`, …) |
+| `sankhya_status` | Vault, perfil padrão, se há sessão. Sem senha e sem token |
 
-## Uso previsto no Cursor
+Não existe tool de login. Default é **direct** (`MobileLoginSP` no host da URL do Login). Gateway só se o item tiver `mode=gateway` **e** `client_id`, `client_secret`, `x_token`.
 
-O MCP precisa rodar na máquina que alcança o ERP (VPN / rede do cliente, ou Gateway público). Credenciais vêm do 1Password (CLI `op`); nunca vão no git nem no texto da tool.
+Somente SELECT. Default 200 linhas, teto 2000. Notas do 1Password (VPN, RDP, banco) **não** são lidas.
+
+## Pré-requisitos na máquina
+
+1. Node.js 20+
+2. 1Password desktop + CLI (`op --version`)
+3. App: Configurações → Developer → **Integrar com 1Password CLI**
+4. App aberto na bandeja
+5. VPN do cliente quando o Om for host interno / `*.snk.ativy.com`
+
+Conferiu o CLI:
+
+```bat
+op vault list
+op item list --vault tkrys7yhgj64dmo643ovrxa7ie
+```
+
+(O ID evita o traço “bonito” do nome do vault.)
+
+## Instalação (Windows)
+
+```bat
+git clone <url-deste-repo> C:\projetos\sankhya-mcp
+cd C:\projetos\sankhya-mcp
+npm install
+npm run build
+```
+
+No Cursor: Settings → MCP → adicionar o conteúdo de [`examples/cursor-mcp.json`](examples/cursor-mcp.json) (já aponta para `C:\projetos\sankhya-mcp\scripts\sankhya-mcp.cmd`).
+
+Reinicie o MCP. Na conversa: “lista os perfis Sankhya” e depois “no cliente Fralia, SELECT CODPROD, DESCRPROD FROM TGFPRO”.
+
+Opcional no `env` do MCP:
+
+```json
+"SANKHYA_DEFAULT_PROFILE": "Fralia"
+```
+
+## Item no 1Password (Login)
+
+| Campo | Direct (hoje, todos) | Gateway (quando existir) |
+|--------|----------------------|---------------------------|
+| título | nome do perfil | idem |
+| username / password | user Om | ignorados |
+| URL | `http://host:porta/mge/` | — |
+| `mode` | (ausente) | `gateway` |
+| `client_id` / `client_secret` / `x_token` | — | os três, senão continua direct e avisa |
+
+## Desenvolvimento
+
+```bat
+npm test
+npm run typecheck
+npm run dev
+```
+
+Documentação de desenho: [`docs/analise-viabilidade.md`](docs/analise-viabilidade.md).
