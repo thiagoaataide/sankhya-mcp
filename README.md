@@ -58,6 +58,14 @@ Opcional no `env` do MCP:
 "SANKHYA_DEFAULT_PROFILE": "Fralia"
 ```
 
+Se `sankhya_list_profiles` falhar com `spawn op ENOENT`, o Prompt acha o `op` e o processo do MCP não (comum no Windows com winget). No Prompt: `where op`. Cole o caminho no `mcp.json`:
+
+```json
+"SANKHYA_OP_BIN": "C:\\\\Users\\\\SEU_USUARIO\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Links\\\\op.exe"
+```
+
+Não peça ao Agent para reinstalar o CLI nem para listar o cofre via terminal. A tool certa é `sankhya_list_profiles`.
+
 ## Item no 1Password (Login)
 
 | Campo | Direct (hoje, todos) | Gateway (quando existir) |

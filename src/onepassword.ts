@@ -1,8 +1,8 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { existsSync } from "node:fs";
 import { opVaultId } from "./config.js";
 import { originFromUrl, resolveAuthMode, type ProfileSecrets, type ResolvedProfile } from "./mode.js";
+import { isMissingBinaryError, resolveOpBinary } from "./op-bin.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -35,27 +35,21 @@ export type ProfileSummary = {
   id: string;
 };
 
-function opBinary(): string {
-  const fromEnv = process.env.SANKHYA_OP_BIN?.trim();
-  if (fromEnv) {
-    return fromEnv;
-  }
-  const windowsDefault = "C:\\Program Files\\1Password CLI\\op.exe";
-  if (process.platform === "win32" && existsSync(windowsDefault)) {
-    return windowsDefault;
-  }
-  return "op";
-}
-
 async function op(args: string[]): Promise<string> {
+  const bin = resolveOpBinary();
   try {
-    const { stdout } = await execFileAsync(opBinary(), args, {
+    const { stdout } = await execFileAsync(bin, args, {
       timeout: 30_000,
       maxBuffer: 8 * 1024 * 1024,
       windowsHide: true,
     });
     return stdout;
   } catch (error) {
+    if (isMissingBinaryError(error)) {
+      throw new Error(
+        `1Password CLI não está no PATH deste processo (tentou: ${bin}). Defina SANKHYA_OP_BIN no mcp.json com o caminho completo do op.exe (where op). Não use o terminal do Cursor para ler o cofre.`,
+      );
+    }
     const err = error as { stderr?: string; message?: string };
     const detail = (err.stderr || err.message || "falha ao executar op").trim();
     throw new Error(
