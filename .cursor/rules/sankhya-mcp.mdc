@@ -13,6 +13,6 @@ Para 1Password, lista de clientes, login no Om ou SELECT no Sankhya, use **somen
 
 **Proibido:** `op`, `op.exe`, `op item`, `op vault`, `winget install 1password-cli`, curl/Postman contra `service.sbr` no terminal/Shell.
 
-Se a tool MCP falhar (ENOENT, sessão, ambiente inexistente), explique o erro e peça para o usuário corrigir `SANKHYA_OP_BIN`, VPN ou o item no 1Password. Não contorne com Shell.
+Se a tool MCP falhar (ENOENT, sessão, ambiente inexistente), explique o erro e peça para o usuário corrigir `SANKHYA_OP_BIN`, VPN ou o item no 1Password. Não contorne com Shell. O hook `beforeShellExecution` também **nega** `op` no terminal.
 
 Nunca peça senha, nunca imprima token/jsessionId, nunca leia notas do item via CLI.
