@@ -1,3 +1,5 @@
+import type { Ambiente } from "./ambiente.js";
+
 export type AuthMode = "direct" | "gateway";
 
 export type ProfileSecrets = {
@@ -9,6 +11,8 @@ export type ProfileSecrets = {
   clientId?: string;
   clientSecret?: string;
   xToken?: string;
+  ambiente?: Ambiente;
+  availableAmbientes?: Ambiente[];
 };
 
 export type ResolvedProfile = ProfileSecrets & {

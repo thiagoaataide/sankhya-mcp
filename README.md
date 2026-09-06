@@ -15,7 +15,7 @@ O agente que gerou o código não consegue criar pasta no seu `C:\`. Clone (ou c
 | Tool | Função |
 |------|--------|
 | `sankhya_list_profiles` | Títulos dos itens no vault (os nomes de cliente) |
-| `sankhya_execute_query` | Roda um **SELECT**. Loga sozinho. `profile` = título do item (`Fralia`, `Diagno`, …) |
+| `sankhya_execute_query` | SELECT no Om. `profile` = título do item; `ambiente` = `producao` \| `teste` \| `treinamento` |
 | `sankhya_status` | Vault, perfil padrão, se há sessão. Sem senha e sem token |
 
 Não existe tool de login. Default é **direct** (`MobileLoginSP` no host da URL do Login). Gateway só se o item tiver `mode=gateway` **e** `client_id`, `client_secret`, `x_token`.
@@ -50,7 +50,9 @@ npm run build
 
 No Cursor: Settings → MCP → adicionar o conteúdo de [`examples/cursor-mcp.json`](examples/cursor-mcp.json) (já aponta para `C:\projetos\sankhya-mcp\scripts\sankhya-mcp.cmd`).
 
-Reinicie o MCP. Na conversa: “lista os perfis Sankhya” e depois “no cliente Fralia, SELECT CODPROD, DESCRPROD FROM TGFPRO”.
+Reinicie o MCP. Na conversa: “lista os perfis Sankhya” e depois “no cliente Facilita Telecom, ambiente teste, SELECT CODPROD, DESCRPROD FROM TGFPRO”.
+
+Não junte o ambiente no nome do perfil (`Facilita teste`). Título do item + parâmetro `ambiente`.
 
 Opcional no `env` do MCP:
 
@@ -68,13 +70,22 @@ Não peça ao Agent para reinstalar o CLI nem para listar o cofre via terminal. 
 
 ## Item no 1Password (Login)
 
-| Campo | Direct (hoje, todos) | Gateway (quando existir) |
-|--------|----------------------|---------------------------|
-| título | nome do perfil | idem |
-| username / password | user Om | ignorados |
-| URL | `http://host:porta/mge/` | — |
+O MCP lê **Produção / Teste / Treinamento** assim (não precisa ter as três):
+
+1. Websites do Login com rótulo `Prod`, `Teste`, `Treinamento` (como o RHB), **ou**
+2. Seções com esses nomes e campos `url` + senha (como o Facilita). Campo `Senha SUP` assume usuário `SUP`.
+
+| Campo | Direct | Gateway |
+|--------|--------|---------|
+| título | `profile` | idem |
+| username / password (nível do item) | fallback se a seção não tiver | ignorados no Om |
+| URL por ambiente | website rotulado ou `url` na seção | — |
 | `mode` | (ausente) | `gateway` |
-| `client_id` / `client_secret` / `x_token` | — | os três, senão continua direct e avisa |
+| `client_id` / `client_secret` / `x_token` | — | os três |
+
+Se pedir `treinamento` e o item só tiver prod/teste, a tool **recusa** e lista o que existe. Default sem `ambiente`: `producao`, ou a única base do cliente.
+
+Notas (VPN, RDP, banco) continuam ignoradas.
 
 ## Desenvolvimento
 

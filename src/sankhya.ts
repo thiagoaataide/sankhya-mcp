@@ -1,8 +1,10 @@
 import { gatewayUrl, REQUEST_TIMEOUT_MS } from "./config.js";
+import type { Ambiente } from "./ambiente.js";
 import type { AuthMode, ResolvedProfile } from "./mode.js";
 
 export type Session = {
   profile: string;
+  ambiente?: Ambiente;
   mode: AuthMode;
   authorization?: string;
   cookie?: string;
@@ -14,22 +16,27 @@ type Cached = Session & { expiresAt: number };
 
 const cache = new Map<string, Cached>();
 
-export function peekSession(profile: string): Session | undefined {
-  const hit = cache.get(profile.toLowerCase());
+function sessionKey(profile: string, ambiente?: Ambiente): string {
+  return `${profile.toLowerCase()}::${ambiente ?? "_"}`;
+}
+
+export function peekSession(profile: string, ambiente?: Ambiente): Session | undefined {
+  const key = sessionKey(profile, ambiente);
+  const hit = cache.get(key);
   if (!hit) {
     return undefined;
   }
   if (Date.now() >= hit.expiresAt) {
-    cache.delete(profile.toLowerCase());
+    cache.delete(key);
     return undefined;
   }
   return hit;
 }
 
 export async function ensureSession(profile: ResolvedProfile, force = false): Promise<Session> {
-  const key = profile.title.toLowerCase();
+  const key = sessionKey(profile.title, profile.ambiente);
   if (!force) {
-    const existing = peekSession(profile.title);
+    const existing = peekSession(profile.title, profile.ambiente);
     if (existing && existing.mode === profile.mode) {
       return existing;
     }
@@ -45,7 +52,7 @@ export async function ensureSession(profile: ResolvedProfile, force = false): Pr
 async function loginDirect(profile: ResolvedProfile): Promise<Cached> {
   if (!profile.baseUrl || !profile.username || !profile.password) {
     throw new Error(
-      `Perfil "${profile.title}" em modo direct precisa de username, password e URL do Om no Login do 1Password.`,
+      `Perfil "${profile.title}" (${profile.ambiente ?? "producao"}) em modo direct precisa de username, password e URL do Om no 1Password.`,
     );
   }
 
@@ -73,6 +80,7 @@ async function loginDirect(profile: ResolvedProfile): Promise<Cached> {
 
   return {
     profile: profile.title,
+    ambiente: profile.ambiente,
     mode: "direct",
     cookie: `JSESSIONID=${jsessionId}`,
     serviceBase: `${profile.baseUrl}/mge/service.sbr`,
@@ -118,6 +126,7 @@ async function loginGateway(profile: ResolvedProfile): Promise<Cached> {
   const ttlMs = Math.max(30, (json.expires_in ?? 300) - 30) * 1000;
   return {
     profile: profile.title,
+    ambiente: profile.ambiente,
     mode: "gateway",
     authorization: `Bearer ${token}`,
     serviceBase: `${gatewayUrl()}/gateway/v1/mge/service.sbr`,

@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { parseAmbiente } from "./ambiente.js";
 import { defaultProfile, opVaultId, TEAM_VAULT_NAME } from "./config.js";
 import { listProfiles, loadProfile } from "./onepassword.js";
 import { executeQuery } from "./query.js";
@@ -13,7 +14,7 @@ const server = new McpServer(
   { name: "sankhya", version: "0.1.0" },
   {
     instructions:
-      "MCP local de consulta ao Sankhya Om. Credenciais vêm do vault 1Password Sankhya – Clientes. Default é login direct no host do item. Gateway só se o item tiver mode=gateway e client_id, client_secret, x_token. Nunca peça senha ao usuário. Informe o profile (título do item). Somente SELECT.",
+      "MCP local de consulta ao Sankhya Om. Credenciais vêm do vault 1Password Sankhya – Clientes. Informe profile (título do item) e ambiente (producao, teste ou treinamento). Nem todo cliente tem as três bases; se faltar, a tool lista as disponíveis. Default de ambiente é producao. Default de auth é direct. Gateway só com mode=gateway e as três chaves. Nunca peça senha. Somente SELECT.",
   },
 );
 
@@ -33,7 +34,12 @@ server.registerTool(
       vaultName: TEAM_VAULT_NAME,
       defaultProfile: profile ?? null,
       session: session
-        ? { profile: session.profile, mode: session.mode, warning: session.warning ?? null }
+        ? {
+            profile: session.profile,
+            ambiente: session.ambiente ?? null,
+            mode: session.mode,
+            warning: session.warning ?? null,
+          }
         : null,
     });
   },
@@ -62,13 +68,19 @@ server.registerTool(
   {
     title: "Executar SELECT no Sankhya",
     description:
-      "Executa um SELECT no Om do cliente. Autentica sozinho (direct ou gateway conforme o item no 1Password). profile é o título do item (ex.: Fralia). Somente SELECT/WITH. Default 200 linhas, máximo 2000.",
+      "Executa um SELECT no Om do cliente. Autentica sozinho. profile é o título do item (ex.: Facilita Telecom). ambiente é producao, teste ou treinamento — não misture no nome do perfil. Somente SELECT/WITH. Default 200 linhas.",
     inputSchema: {
       sql: z.string().describe("Um único SELECT (ou WITH … SELECT). Sem INSERT/UPDATE/DELETE."),
       profile: z
         .string()
         .optional()
         .describe("Título do item no vault Sankhya – Clientes. Se omitido, usa SANKHYA_DEFAULT_PROFILE."),
+      ambiente: z
+        .string()
+        .optional()
+        .describe(
+          "Base Sankhya: producao, teste ou treinamento (aceita prod, testes, treino). Padrão: producao se existir; senão a única base do item.",
+        ),
       max_rows: z
         .number()
         .int()
@@ -79,7 +91,7 @@ server.registerTool(
     },
     annotations: { readOnlyHint: true, openWorldHint: true },
   },
-  async ({ sql, profile, max_rows }) => {
+  async ({ sql, profile, ambiente, max_rows }) => {
     try {
       const name = profile?.trim() || defaultProfile();
       if (!name) {
@@ -89,12 +101,15 @@ server.registerTool(
         );
       }
       const safeSql = assertReadOnlySelect(sql);
-      const loaded = await loadProfile(name);
+      const env = parseAmbiente(ambiente);
+      const loaded = await loadProfile(name, env);
       const session = await ensureSession(loaded);
       try {
         const result = await executeQuery(session, safeSql, max_rows);
         return toolText({
           profile: loaded.title,
+          ambiente: loaded.ambiente ?? null,
+          availableAmbientes: loaded.availableAmbientes ?? [],
           mode: session.mode,
           warning: session.warning ?? null,
           sql: safeSql,
@@ -107,6 +122,8 @@ server.registerTool(
           const result = await executeQuery(retried, safeSql, max_rows);
           return toolText({
             profile: loaded.title,
+            ambiente: loaded.ambiente ?? null,
+            availableAmbientes: loaded.availableAmbientes ?? [],
             mode: retried.mode,
             warning: retried.warning ?? null,
             sql: safeSql,

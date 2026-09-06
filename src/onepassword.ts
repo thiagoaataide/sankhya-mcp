@@ -1,28 +1,12 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { opVaultId } from "./config.js";
-import { originFromUrl, resolveAuthMode, type ProfileSecrets, type ResolvedProfile } from "./mode.js";
+import { resolveAuthMode, type ProfileSecrets, type ResolvedProfile } from "./mode.js";
 import { isMissingBinaryError, resolveOpBinary } from "./op-bin.js";
+import { secretsForAmbiente, type OpItem } from "./item-env.js";
+import type { Ambiente } from "./ambiente.js";
 
 const execFileAsync = promisify(execFile);
-
-type OpField = {
-  id?: string;
-  label?: string;
-  type?: string;
-  value?: string;
-  purpose?: string;
-};
-
-type OpUrl = { href?: string; primary?: boolean };
-
-type OpItem = {
-  id: string;
-  title: string;
-  vault?: { id?: string; name?: string };
-  urls?: OpUrl[];
-  fields?: OpField[];
-};
 
 type OpListRow = {
   id: string;
@@ -73,23 +57,19 @@ function fieldValue(item: OpItem, names: string[]): string | undefined {
   return undefined;
 }
 
-function primaryUrl(item: OpItem): string | undefined {
-  const urls = item.urls ?? [];
-  const primary = urls.find((entry) => entry.primary) ?? urls[0];
-  return primary?.href?.trim();
-}
-
-function toSecrets(item: OpItem): ProfileSecrets {
-  const url = primaryUrl(item);
+function toSecrets(item: OpItem, ambiente?: Ambiente): ProfileSecrets {
+  const picked = secretsForAmbiente(item, ambiente);
   return {
     title: item.title,
-    username: fieldValue(item, ["username", "user", "nomusu"]),
-    password: fieldValue(item, ["password", "senha", "interno"]),
-    baseUrl: url ? originFromUrl(url) : undefined,
+    username: picked.username,
+    password: picked.password,
+    baseUrl: picked.baseUrl,
     modeField: fieldValue(item, ["mode", "modo"]),
     clientId: fieldValue(item, ["client_id", "clientid", "client id"]),
     clientSecret: fieldValue(item, ["client_secret", "clientsecret", "client secret"]),
     xToken: fieldValue(item, ["x_token", "xtoken", "x-token"]),
+    ambiente: picked.ambiente,
+    availableAmbientes: picked.available,
   };
 }
 
@@ -101,10 +81,10 @@ export async function listProfiles(): Promise<ProfileSummary[]> {
     .sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
 }
 
-export async function loadProfile(title: string): Promise<ResolvedProfile> {
+export async function loadProfile(title: string, ambiente?: Ambiente): Promise<ResolvedProfile> {
   const raw = await op(["item", "get", title, "--vault", opVaultId(), "--reveal", "--format", "json"]);
   const item = JSON.parse(raw) as OpItem;
-  const secrets = toSecrets(item);
+  const secrets = toSecrets(item, ambiente);
   const resolved = resolveAuthMode(secrets);
   return { ...secrets, ...resolved };
 }
