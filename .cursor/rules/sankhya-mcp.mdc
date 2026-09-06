@@ -1,5 +1,5 @@
 ---
-description: Usar só as tools MCP sankhya para cofre e Om; nunca op no terminal.
+description: Usar só as tools MCP sankhya para cofre e Om; nunca op nem HTTP Sankhya no terminal.
 alwaysApply: true
 ---
 
@@ -11,8 +11,10 @@ Para 1Password, lista de clientes, login no Om ou SELECT no Sankhya, use **somen
 - `sankhya_execute_query` (`profile` = título do item, `ambiente` = producao | teste | treinamento)
 - `sankhya_status`
 
-**Proibido:** `op`, `op.exe`, `op item`, `op vault`, `winget install 1password-cli`, curl/Postman contra `service.sbr` no terminal/Shell.
+**Proibido:** `op`, `op.exe`, `op item`, `op vault`, `winget install 1password-cli`, e qualquer HTTP contra o Om no terminal/Shell (`curl`, `Invoke-WebRequest`, `python -c`, `node -e` para `service.sbr`, `/mge/`, `DbExplorerSP`, `MobileLoginSP`, `api.sankhya.com.br`).
 
-Se a tool MCP falhar (ENOENT, sessão, ambiente inexistente), explique o erro e peça para o usuário corrigir `SANKHYA_OP_BIN`, VPN ou o item no 1Password. Não contorne com Shell. O hook `beforeShellExecution` também **nega** `op` no terminal.
+SQL de consulta **só** via `sankhya_execute_query`. Essa tool já recusa INSERT/UPDATE/DELETE e afins.
+
+Se a tool MCP falhar (ENOENT, sessão, ambiente inexistente), explique o erro e peça para o usuário corrigir `SANKHYA_OP_BIN`, VPN ou o item no 1Password. Não contorne com Shell. O hook `beforeShellExecution` **nega** `op` e HTTP Sankhya no terminal do Agent.
 
 Nunca peça senha, nunca imprima token/jsessionId, nunca leia notas do item via CLI.

@@ -72,15 +72,24 @@ O repositório inclui [`.cursor/rules/sankhya-mcp.mdc`](.cursor/rules/sankhya-mc
 
 Há também um **hook de projeto** ([`.cursor/hooks.json`](.cursor/hooks.json)): vale com a pasta `sankhya-mcp` aberta.
 
-Para bloquear `op` no Agent **em qualquer projeto**, instale o hook **do usuário** uma vez (copia o script para `%USERPROFILE%\.cursor\`):
+Para o Agent **em qualquer projeto** não usar `op` nem HTTP contra o Om (`curl` / `Invoke-WebRequest` / `python -c` em `service.sbr`), instale o hook **do usuário** (copia o script para `%USERPROFILE%\.cursor\`). Se você já instalou uma versão antiga, rode de novo — o instalador **atualiza** o `matcher` no lugar:
 
 ```bat
-cd C:\proj\sankhya-mcp
+cd C:\projetos\sankhya-mcp
 git pull
 scripts\install-user-hook.cmd
 ```
 
-Reinicie o Cursor. Em Settings → Hooks devem aparecer o do projeto **e** o de `~\.cursor`. O `Open config` que abre `C:\Users\...\ .cursor\hooks.json` é o global — depois do instalador ele deixa de estar vazio. O Prompt que você abre na mão continua podendo rodar `op`; só o Shell do Agent é bloqueado.
+Reinicie o Cursor. Em Settings → Hooks devem aparecer o do projeto **e** o de `~\.cursor`. O `Open config` que abre `C:\Users\...\ .cursor\hooks.json` é o global — depois do instalador ele deixa de estar vazio. O Prompt que você abre na mão continua podendo rodar `op` e `curl`; só o Shell do Agent é bloqueado.
+
+## SQL só pelo MCP
+
+Duas camadas, de propósito:
+
+1. **`sankhya_execute_query`** — único caminho de SELECT. Recusa INSERT/UPDATE/DELETE e múltiplos comandos (`src/sql-guard.ts`). Teto de 2000 linhas.
+2. **Hook `beforeShellExecution`** — o Agent não consegue contornar com `curl`, `iwr`, `python -c` ou `node -e` contra `service.sbr`, `/mge/`, `DbExplorerSP` ou `api.sankhya.com.br`. Pesquisar o repo (`rg service.sbr`) continua permitido.
+
+Isso **não** bloqueia `sqlplus` / cliente Oracle no banco do cliente (notas de VPN/RDP/Oracle no 1Password nem são lidas). Também não inspeciona o corpo de um `python script.py` genérico: o lock é o comando visível no Shell do Agent + a tool MCP. O Prompt manual do Windows não entra no hook.
 
 ## Item no 1Password (Login)
 

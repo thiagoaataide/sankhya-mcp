@@ -6,7 +6,7 @@
         "command": "node .cursor/hooks/block-op-shell.cjs",
         "timeout": 10,
         "failClosed": true,
-        "matcher": "op\\.exe|(^|[\\s;&|\\\\/'\"])op(\\s|$)|1password-cli|AgileBits\\.1Password|where\\s+op|Get-Command\\s+op"
+        "matcher": "op\\.exe|(^|[\\s;&|\\\\/'\"])op(\\s|$)|1password-cli|AgileBits\\.1Password|where\\s+op|Get-Command\\s+op|service\\.sbr|DbExplorerSP|ExecQuerySP|MobileLoginSP|CRUDServiceProvider|/mge/|sankhya\\.com|snk\\.ativy|Invoke-WebRequest|\\biwr\\b|Invoke-RestMethod"
       }
     ]
   }
