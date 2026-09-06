@@ -68,6 +68,8 @@ Se `sankhya_list_profiles` falhar com `spawn op ENOENT`, o Prompt acha o `op` e 
 
 Não peça ao Agent para reinstalar o CLI nem para listar o cofre via terminal. A tool certa é `sankhya_list_profiles`.
 
+O repositório inclui [`.cursor/rules/sankhya-mcp.mdc`](.cursor/rules/sankhya-mcp.mdc): no chat **dentro desta pasta**, o Agent deve usar só as tools MCP. Para chats em outro projeto, copie o texto da rule em **Cursor Settings → Rules** (User rule).
+
 ## Item no 1Password (Login)
 
 O MCP lê **Produção / Teste / Treinamento** assim (não precisa ter as três):

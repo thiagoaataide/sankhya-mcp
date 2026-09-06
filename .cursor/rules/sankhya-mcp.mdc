@@ -1,0 +1,18 @@
+---
+description: Usar só as tools MCP sankhya para cofre e Om; nunca op no terminal.
+alwaysApply: true
+---
+
+# Sankhya MCP
+
+Para 1Password, lista de clientes, login no Om ou SELECT no Sankhya, use **somente** as tools MCP:
+
+- `sankhya_list_profiles`
+- `sankhya_execute_query` (`profile` = título do item, `ambiente` = producao | teste | treinamento)
+- `sankhya_status`
+
+**Proibido:** `op`, `op.exe`, `op item`, `op vault`, `winget install 1password-cli`, curl/Postman contra `service.sbr` no terminal/Shell.
+
+Se a tool MCP falhar (ENOENT, sessão, ambiente inexistente), explique o erro e peça para o usuário corrigir `SANKHYA_OP_BIN`, VPN ou o item no 1Password. Não contorne com Shell.
+
+Nunca peça senha, nunca imprima token/jsessionId, nunca leia notas do item via CLI.
