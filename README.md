@@ -70,9 +70,17 @@ Não peça ao Agent para reinstalar o CLI nem para listar o cofre via terminal. 
 
 O repositório inclui [`.cursor/rules/sankhya-mcp.mdc`](.cursor/rules/sankhya-mcp.mdc): no chat **dentro desta pasta**, o Agent deve usar só as tools MCP. Para chats em outro projeto, copie o texto da rule em **Cursor Settings → Rules** (User rule).
 
-Há também um **hook** ([`.cursor/hooks.json`](.cursor/hooks.json)): o terminal do Agent **não executa** `op` / `op.exe` / `1password-cli`. A tool MCP continua podendo chamar o CLI. Abra esta pasta no Cursor e, se existir, mantenha Hooks ligados em Settings. Depois do `git pull`, não precisa reinstalar o MCP — só recarregar a janela se o hook não aparecer em Settings → Hooks.
+Há também um **hook de projeto** ([`.cursor/hooks.json`](.cursor/hooks.json)): vale com a pasta `sankhya-mcp` aberta.
 
-O `where op` no **Prompt que você abre na mão** continua liberado. Só o Shell do Agent é bloqueado.
+Para bloquear `op` no Agent **em qualquer projeto**, instale o hook **do usuário** uma vez (copia o script para `%USERPROFILE%\.cursor\`):
+
+```bat
+cd C:\proj\sankhya-mcp
+git pull
+scripts\install-user-hook.cmd
+```
+
+Reinicie o Cursor. Em Settings → Hooks devem aparecer o do projeto **e** o de `~\.cursor`. O `Open config` que abre `C:\Users\...\ .cursor\hooks.json` é o global — depois do instalador ele deixa de estar vazio. O Prompt que você abre na mão continua podendo rodar `op`; só o Shell do Agent é bloqueado.
 
 ## Item no 1Password (Login)
 
