@@ -13,7 +13,7 @@
     "prepare": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "test": "tsx --test src/mode.test.ts src/sql-guard.test.ts src/op-bin.test.ts src/ambiente.test.ts src/block-op-shell.test.ts src/install-user-hook.test.ts",
+    "test": "tsx --test src/mode.test.ts src/sql-guard.test.ts src/op-bin.test.ts src/ambiente.test.ts src/block-op-shell.test.ts src/install-user-hook.test.ts src/install-global.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

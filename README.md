@@ -2,13 +2,13 @@
 
 MCP **local** para o Cursor consultar o Sankhya Om. Um servidor, autenticação invisível, credenciais no vault **Sankhya – Clientes** do 1Password.
 
-Este repositório é o projeto. Na máquina da equipe ele deve viver em:
+Na máquina da equipe o clone vive **sempre** em:
 
 ```text
 C:\projetos\sankhya-mcp
 ```
 
-O agente que gerou o código não consegue criar pasta no seu `C:\`. Clone (ou copie) o git para esse caminho.
+Remote da empresa (SSH): `git@github.com:GRUPO-GET/sankhya-mcp.git`.
 
 ## O que o modelo vê
 
@@ -41,46 +41,49 @@ op item list --vault tkrys7yhgj64dmo643ovrxa7ie
 
 ## Instalação (Windows)
 
+Precisa de chave SSH na org **GRUPO-GET** (todo mundo já usa). O 1Password **desktop** continua sendo instalado à parte; o script instala o **CLI**.
+
+Primeira vez, no Prompt:
+
 ```bat
-git clone <url-deste-repo> C:\projetos\sankhya-mcp
-cd C:\projetos\sankhya-mcp
-npm install
-npm run build
+git clone git@github.com:GRUPO-GET/sankhya-mcp.git C:\projetos\sankhya-mcp && C:\projetos\sankhya-mcp\scripts\install.cmd
 ```
 
-No Cursor: Settings → MCP → adicionar o conteúdo de [`examples/cursor-mcp.json`](examples/cursor-mcp.json) (já aponta para `C:\projetos\sankhya-mcp\scripts\sankhya-mcp.cmd`).
+Se a pasta já existe:
 
-Reinicie o MCP. Na conversa: “lista os perfis Sankhya” e depois “no cliente Facilita Telecom, ambiente teste, SELECT CODPROD, DESCRPROD FROM TGFPRO”.
+```bat
+C:\projetos\sankhya-mcp\scripts\install.cmd
+```
+
+O `install.cmd` empacota o restante:
+
+1. Cria `C:\projetos` se faltar e clona/atualiza pelo remote SSH `git@github.com:GRUPO-GET/sankhya-mcp.git` (remote git `get`)
+2. Instala **1Password CLI** com winget (`AgileBits.1Password.CLI` / `winget install 1password-cli`)
+3. Instala Git e Node.js LTS via winget se não estiverem no PATH
+4. `npm install` (compila `dist\index.js`)
+5. Grava o MCP **global**:
+   - Cursor: `%USERPROFILE%\.cursor\mcp.json`
+   - Codex: `%USERPROFILE%\.codex\config.toml` (CLI, extensão e app leem o mesmo arquivo)
+6. Hook e rule globais do Cursor (`beforeShellExecution` + `~\.cursor\rules\sankhya-mcp.mdc`)
+7. Bloco curto em `%USERPROFILE%\.codex\AGENTS.md` para o Codex também ir só nas tools MCP
+
+Reinicie **Cursor** e **Codex**. Na conversa: “lista os perfis Sankhya” e depois “no cliente Facilita Telecom, ambiente teste, SELECT CODPROD, DESCRPROD FROM TGFPRO”.
 
 Não junte o ambiente no nome do perfil (`Facilita teste`). Título do item + parâmetro `ambiente`.
 
-Opcional no `env` do MCP:
+Opcional no `env` do MCP (Cursor) ou em `[mcp_servers.sankhya.env]` (Codex):
 
 ```json
 "SANKHYA_DEFAULT_PROFILE": "Fralia"
 ```
 
-Se `sankhya_list_profiles` falhar com `spawn op ENOENT`, o Prompt acha o `op` e o processo do MCP não (comum no Windows com winget). No Prompt: `where op`. Cole o caminho no `mcp.json`:
-
-```json
-"SANKHYA_OP_BIN": "C:\\\\Users\\\\SEU_USUARIO\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Links\\\\op.exe"
-```
+O instalador tenta gravar `SANKHYA_OP_BIN` se achar o `op.exe`. Se `sankhya_list_profiles` ainda falhar com `spawn op ENOENT`, no Prompt: `where op` e cole o caminho no `mcp.json` / `config.toml`.
 
 Não peça ao Agent para reinstalar o CLI nem para listar o cofre via terminal. A tool certa é `sankhya_list_profiles`.
 
-O repositório inclui [`.cursor/rules/sankhya-mcp.mdc`](.cursor/rules/sankhya-mcp.mdc): no chat **dentro desta pasta**, o Agent deve usar só as tools MCP. Para chats em outro projeto, copie o texto da rule em **Cursor Settings → Rules** (User rule).
+Exemplos manuais: [`examples/cursor-mcp.json`](examples/cursor-mcp.json), [`examples/codex-config.toml`](examples/codex-config.toml).
 
-Há também um **hook de projeto** ([`.cursor/hooks.json`](.cursor/hooks.json)): vale com a pasta `sankhya-mcp` aberta.
-
-Para o Agent **em qualquer projeto** não usar `op` nem HTTP contra o Om (`curl` / `Invoke-WebRequest` / `python -c` em `service.sbr`), instale o hook **do usuário** (copia o script para `%USERPROFILE%\.cursor\`). Se você já instalou uma versão antiga, rode de novo — o instalador **atualiza** o `matcher` no lugar:
-
-```bat
-cd C:\projetos\sankhya-mcp
-git pull
-scripts\install-user-hook.cmd
-```
-
-Reinicie o Cursor. Em Settings → Hooks devem aparecer o do projeto **e** o de `~\.cursor`. O `Open config` que abre `C:\Users\...\ .cursor\hooks.json` é o global — depois do instalador ele deixa de estar vazio. O Prompt que você abre na mão continua podendo rodar `op` e `curl`; só o Shell do Agent é bloqueado.
+O Prompt que você abre na mão continua podendo rodar `op` e `curl`; só o Shell do Agent do Cursor é bloqueado pelo hook. O Codex não usa o hook do Cursor — a orientação dele está no `AGENTS.md` do usuário.
 
 ## SQL só pelo MCP
 

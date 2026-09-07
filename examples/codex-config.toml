@@ -1,0 +1,12 @@
+# Exemplo do bloco que o instalador grava em %USERPROFILE%\.codex\config.toml
+# Caminhos Windows em aspas simples: https://developers.openai.com/codex/config-reference
+
+[mcp_servers.sankhya]
+command = 'C:\Program Files\nodejs\node.exe'
+args = ["C:\\projetos\\sankhya-mcp\\dist\\index.js"]
+cwd = 'C:\projetos\sankhya-mcp'
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+[mcp_servers.sankhya.env]
+SANKHYA_OP_VAULT = "tkrys7yhgj64dmo643ovrxa7ie"
