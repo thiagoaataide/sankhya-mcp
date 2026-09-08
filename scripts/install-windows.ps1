@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 $ErrorActionPreference = "Stop"
 
 $GetRemote = "git@github.com:GRUPO-GET/sankhya-mcp.git"
@@ -23,7 +23,7 @@ function Test-Command([string]$Name) {
 
 function Install-WingetPackage([string]$Id, [string]$DisplayName) {
   if (-not (Test-Command "winget")) {
-    throw "winget não está no PATH. Atualize o App Installer da Microsoft Store e rode de novo."
+    throw "winget nao esta no PATH. Atualize o App Installer da Microsoft Store e rode de novo."
   }
   Write-Step "winget: $DisplayName"
   $args = @(
@@ -41,7 +41,7 @@ function Install-WingetPackage([string]$Id, [string]$DisplayName) {
     Refresh-Path
     return
   }
-  throw "winget install $Id saiu com código $code."
+  throw "winget install $Id saiu com codigo $code."
 }
 
 function Resolve-OpBin {
@@ -70,7 +70,7 @@ function Ensure-GitRemote([string]$Name, [string]$Url) {
     & git remote add $Name $Url
   }
   if ($LASTEXITCODE -ne 0) {
-    throw "Não configurei o remote $Name -> $Url"
+    throw "Nao configurei o remote $Name -> $Url"
   }
 }
 
@@ -79,20 +79,20 @@ Write-Host "Clone: $Root"
 Write-Host "Remote: $GetRemote"
 
 if (-not (Test-Command "git")) {
-  Write-Step "Git não encontrado — instalando Git.Git"
+  Write-Step "Git nao encontrado - instalando Git.Git"
   Install-WingetPackage "Git.Git" "Git"
   Refresh-Path
   if (-not (Test-Command "git")) {
-    throw "Git instalado, mas ainda não está no PATH. Feche o Prompt, abra outro e rode scripts\install.cmd de novo."
+    throw "Git instalado, mas ainda nao esta no PATH. Feche o Prompt, abra outro e rode scripts\install.cmd de novo."
   }
 }
 
 if (-not (Test-Command "node")) {
-  Write-Step "Node.js não encontrado — instalando OpenJS.NodeJS.LTS"
+  Write-Step "Node.js nao encontrado - instalando OpenJS.NodeJS.LTS"
   Install-WingetPackage "OpenJS.NodeJS.LTS" "Node.js LTS"
   Refresh-Path
   if (-not (Test-Command "node")) {
-    throw "Node instalado, mas ainda não está no PATH. Feche o Prompt, abra outro e rode scripts\install.cmd de novo."
+    throw "Node instalado, mas ainda nao esta no PATH. Feche o Prompt, abra outro e rode scripts\install.cmd de novo."
   }
 }
 
@@ -105,24 +105,24 @@ Write-Step "1Password CLI (winget $WingetCliId)"
 try {
   Install-WingetPackage $WingetCliId "1Password CLI"
 } catch {
-  Write-Host "Tentando o alias oficial '1password-cli'..." -ForegroundColor Yellow
+  Write-Host "Tentando o alias oficial 1password-cli..." -ForegroundColor Yellow
   & winget install 1password-cli --accept-package-agreements --accept-source-agreements --disable-interactivity
   if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1978335189) {
-    throw "Não instalei o 1Password CLI. $($_.Exception.Message)"
+    throw "Nao instalei o 1Password CLI. $($_.Exception.Message)"
   }
   Refresh-Path
 }
 
-Write-Step "Clone / atualização em $Root"
+Write-Step "Clone / atualizacao em $Root"
 New-Item -ItemType Directory -Force -Path $Projects | Out-Null
 
 if (-not (Test-Path (Join-Path $Root ".git"))) {
   if (Test-Path $Root) {
-    throw "$Root existe, mas não é um clone git. Mova/renomeie a pasta e rode de novo."
+    throw "$Root existe, mas nao e um clone git. Mova/renomeie a pasta e rode de novo."
   }
   git clone $GetRemote $Root
   if ($LASTEXITCODE -ne 0) {
-    throw "git clone falhou. Confira a chave SSH nesta máquina e o acesso à org GRUPO-GET."
+    throw "git clone falhou. Confira a chave SSH nesta maquina e o acesso a org GRUPO-GET."
   }
   Push-Location $Root
   try {
@@ -140,7 +140,7 @@ if (-not (Test-Path (Join-Path $Root ".git"))) {
     }
     git pull --ff-only get main
     if ($LASTEXITCODE -ne 0) {
-      Write-Warning "git pull --ff-only não aplicou. O clone local tem commits que não fast-forward. Continuando com o que já está na pasta."
+      Write-Warning "git pull --ff-only nao aplicou. O clone local tem commits que nao fast-forward. Continuando com o que ja esta na pasta."
     }
   } finally {
     Pop-Location
@@ -169,7 +169,7 @@ if ($opBin) {
   $env:SANKHYA_OP_BIN = $opBin
   Write-Host "op.exe: $opBin"
 } else {
-  Write-Warning "op.exe não apareceu no PATH ainda. O launcher scripts\sankhya-mcp.cmd tenta os caminhos padrão. Reinicie o Prompt se o MCP não achar o CLI."
+  Write-Warning "op.exe nao apareceu no PATH ainda. O launcher scripts\sankhya-mcp.cmd tenta os caminhos padrao. Reinicie o Prompt se o MCP nao achar o CLI."
 }
 
 Write-Step "MCP global (Cursor + Codex) e hook do Agent"
@@ -182,9 +182,9 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host ""
 Write-Host "Pronto." -ForegroundColor Green
-Write-Host "Ainda falta na máquina:"
-Write-Host "  1. App 1Password aberto, vault Sankhya – Clientes visível"
-Write-Host "  2. 1Password → Configurações → Developer → Integrar com 1Password CLI"
+Write-Host "Ainda falta na maquina:"
+Write-Host "  1. App 1Password aberto, vault Sankhya - Clientes visivel"
+Write-Host "  2. 1Password > Configuracoes > Developer > Integrar com 1Password CLI"
 Write-Host "  3. Reiniciar Cursor e Codex"
 Write-Host ""
 Write-Host "Teste no Cursor/Codex: lista os perfis Sankhya"
