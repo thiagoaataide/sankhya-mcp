@@ -6,7 +6,7 @@ import { parseAmbiente } from "./ambiente.js";
 import { defaultProfile, opVaultId, TEAM_VAULT_NAME } from "./config.js";
 import { listProfiles, loadProfile } from "./onepassword.js";
 import { executeQuery } from "./query.js";
-import { ensureSession, peekSession } from "./sankhya.js";
+import { peekSession } from "./sankhya.js";
 import { assertReadOnlySelect } from "./sql-guard.js";
 import { sanitizeError, toolText } from "./text.js";
 
@@ -103,36 +103,16 @@ server.registerTool(
       const safeSql = assertReadOnlySelect(sql);
       const env = parseAmbiente(ambiente);
       const loaded = await loadProfile(name, env);
-      const session = await ensureSession(loaded);
-      try {
-        const result = await executeQuery(session, safeSql, max_rows);
-        return toolText({
-          profile: loaded.title,
-          ambiente: loaded.ambiente ?? null,
-          availableAmbientes: loaded.availableAmbientes ?? [],
-          mode: session.mode,
-          warning: session.warning ?? null,
-          sql: safeSql,
-          ...result,
-        });
-      } catch (error) {
-        const message = sanitizeError(error);
-        if (/401|sessão|session|jsession|unauthorized|expir/i.test(message)) {
-          const retried = await ensureSession(loaded, true);
-          const result = await executeQuery(retried, safeSql, max_rows);
-          return toolText({
-            profile: loaded.title,
-            ambiente: loaded.ambiente ?? null,
-            availableAmbientes: loaded.availableAmbientes ?? [],
-            mode: retried.mode,
-            warning: retried.warning ?? null,
-            sql: safeSql,
-            relogged: true,
-            ...result,
-          });
-        }
-        throw error;
-      }
+      const result = await executeQuery(loaded, safeSql, max_rows);
+      return toolText({
+        profile: loaded.title,
+        ambiente: loaded.ambiente ?? null,
+        availableAmbientes: loaded.availableAmbientes ?? [],
+        mode: loaded.mode,
+        warning: loaded.warning ?? null,
+        sql: safeSql,
+        ...result,
+      });
     } catch (error) {
       return toolText(sanitizeError(error), true);
     }

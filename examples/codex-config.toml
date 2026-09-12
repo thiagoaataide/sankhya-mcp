@@ -10,3 +10,4 @@ tool_timeout_sec = 120
 
 [mcp_servers.sankhya.env]
 SANKHYA_OP_VAULT = "tkrys7yhgj64dmo643ovrxa7ie"
+# Se o Codex nao achar op no PATH, defina SANKHYA_OP_BIN com o caminho completo do op.exe

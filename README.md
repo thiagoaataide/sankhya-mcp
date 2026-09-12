@@ -46,10 +46,11 @@ Não precisa colar `mcp.json` na mão. Exemplos: [`examples/cursor-mcp.json`](ex
 
 Não existe tool de login. Default é **direct** (`MobileLoginSP` no host da URL do Login). Gateway só se o item tiver `mode=gateway` **e** `client_id`, `client_secret`, `x_token`.
 
+Se a sessão expirar no Om (comum com usuário Integração, mesmo com `KEEPCONNECTED: S`), o MCP detecta o erro, reloga uma vez e repete a query com novo `JSESSIONID` — transparente para o modelo.
+
 Somente SELECT. Default 200 linhas, teto 2000. Notas do 1Password (VPN, RDP, banco) **não** são lidas.
 
 Não junte o ambiente no nome do perfil (`Facilita teste`). Título do item + parâmetro `ambiente`.
-
 Opcional no `env` do MCP (Cursor) ou em `[mcp_servers.sankhya.env]` (Codex):
 
 ```json

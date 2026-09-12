@@ -1,6 +1,7 @@
 import { gatewayUrl, REQUEST_TIMEOUT_MS } from "./config.js";
 import type { Ambiente } from "./ambiente.js";
 import type { AuthMode, ResolvedProfile } from "./mode.js";
+import { isSessionExpiredError } from "./session-error.js";
 
 export type Session = {
   profile: string;
@@ -133,6 +134,25 @@ async function loginGateway(profile: ResolvedProfile): Promise<Cached> {
     warning: profile.warning,
     expiresAt: Date.now() + ttlMs,
   };
+}
+
+export async function callServiceWithAuthRetry(
+  profile: ResolvedProfile,
+  serviceName: string,
+  requestBody: unknown,
+): Promise<{ json: unknown; session: Session; relogged: boolean }> {
+  let session = await ensureSession(profile);
+  try {
+    const json = await callService(session, serviceName, requestBody);
+    return { json, session, relogged: false };
+  } catch (error) {
+    if (!isSessionExpiredError(error)) {
+      throw error;
+    }
+    session = await ensureSession(profile, true);
+    const json = await callService(session, serviceName, requestBody);
+    return { json, session, relogged: true };
+  }
 }
 
 export async function callService(

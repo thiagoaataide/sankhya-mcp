@@ -1,5 +1,6 @@
 import { DEFAULT_MAX_ROWS, HARD_MAX_ROWS } from "./config.js";
-import { callService, type Session } from "./sankhya.js";
+import type { ResolvedProfile } from "./mode.js";
+import { callServiceWithAuthRetry } from "./sankhya.js";
 
 export type QueryResult = {
   columns: string[];
@@ -10,9 +11,13 @@ export type QueryResult = {
   service: string;
 };
 
-export async function executeQuery(session: Session, sql: string, maxRowsInput?: number): Promise<QueryResult> {
+export async function executeQuery(
+  profile: ResolvedProfile,
+  sql: string,
+  maxRowsInput?: number,
+): Promise<QueryResult & { relogged: boolean }> {
   const maxRows = clampMaxRows(maxRowsInput);
-  const json = await callService(session, "DbExplorerSP.executeQuery", { sql });
+  const { json, relogged } = await callServiceWithAuthRetry(profile, "DbExplorerSP.executeQuery", { sql });
   const parsed = normalizeQueryResponse(json);
   const truncated = parsed.rows.length > maxRows;
   const rows = truncated ? parsed.rows.slice(0, maxRows) : parsed.rows;
@@ -23,6 +28,7 @@ export async function executeQuery(session: Session, sql: string, maxRowsInput?:
     truncated: truncated || parsed.truncated,
     maxRows,
     service: "DbExplorerSP.executeQuery",
+    relogged,
   };
 }
 
